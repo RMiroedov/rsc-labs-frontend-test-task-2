@@ -1,0 +1,54 @@
+.channel-manager {
+    padding: 20px;
+    font-family: sans-serif;
+}
+
+.channel-error {
+    color: red;
+}
+
+.buffer-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.buffer-item {
+    margin-bottom: 10px;
+}
+
+.buffer-image {
+    max-width: 300px;
+    height: auto;
+    display: block;
+}
+
+.log-list {
+    font-size: 0.9em;
+    background: #f0f0f0;
+    padding: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    list-style: none;
+    margin-top: 10px;
+    padding-left: 10px;
+}
+
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+
+.tab {
+    padding: 6px 12px;
+    background: #e0e0e0;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.tab.active {
+    background: #d0d0d0;
+    font-weight: bold;
+}
