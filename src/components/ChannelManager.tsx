@@ -1,4 +1,3 @@
-// src/components/ChannelManager.tsx
 import React, { useState, useMemo } from 'react';
 import { Channel } from '../utils/types';
 import { ChannelService } from '../services/ChannelService';
@@ -31,9 +30,9 @@ const service = new ChannelService(initialChannels, {
   allowPriorityRestore: true
 });
 
-const assignIds = (items: any[]) => {
+const assignIds = <T extends object>(items: T[]): (T & { __uuid: string })[] => {
   return items.map(item => {
-    if (item.__uuid) return item;
+    if ('__uuid' in item) return item as T & { __uuid: string };
     return { ...item, __uuid: uuidv4() };
   });
 };
@@ -60,27 +59,21 @@ export const ChannelManager = () => {
       ) : null}
 
       <div className="tabs">
-        <button
-          className={activeTab === 'buffer' ? 'tab active' : 'tab'}
-          onClick={() => setActiveTab('buffer')}
-        >
+        <button className={activeTab === 'buffer' ? 'tab active' : 'tab'} onClick={() => setActiveTab('buffer')}>
           Буфер ({buffered.length})
         </button>
-        <button
-          className={activeTab === 'log' ? 'tab active' : 'tab'}
-          onClick={() => setActiveTab('log')}
-        >
+        <button className={activeTab === 'log' ? 'tab active' : 'tab'} onClick={() => setActiveTab('log')}>
           Лог ({logs.length})
         </button>
       </div>
 
       {activeTab === 'buffer' && (
         <ul className="buffer-list">
-          {buffered.map((item) => (
+          {buffered.map(item => (
             <li key={item.__uuid} className="buffer-item">
-              {item.setup && item.punchline ? (
+              {'setup' in item && 'punchline' in item ? (
                 <span>{item.setup} — {item.punchline}</span>
-              ) : item.results ? (
+              ) : 'results' in item ? (
                 <div>
                   <img src={item.results[0]?.picture?.medium} alt="user" className="buffer-image" />
                   <p>{item.results[0]?.name?.first} {item.results[0]?.name?.last}</p>

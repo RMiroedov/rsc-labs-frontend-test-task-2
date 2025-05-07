@@ -1,5 +1,6 @@
 import { Channel, ChannelEvent, ChannelStatus } from '../utils/types';
 import { connectWebSocket } from './WebSocketManager';
+import { JokeResponse, RandomUserResponse } from '../utils/apiTypes';
 
 interface ChannelServiceOptions {
   checkInterval?: number;
@@ -10,7 +11,7 @@ export class ChannelService {
   private channels: Channel[] = [];
   private activeChannel: Channel | null = null;
   private listeners: ((event: ChannelEvent) => void)[] = [];
-  private buffer: any[] = [];
+  private buffer: (JokeResponse | RandomUserResponse)[] = [];
   private checkInterval: number;
   private allowPriorityRestore: boolean;
   private pollIntervalId: NodeJS.Timeout | null = null;
@@ -20,7 +21,7 @@ export class ChannelService {
       .map(channel => ({ ...channel, status: 'idle' as ChannelStatus }))
       .sort((a, b) => a.priority - b.priority);
 
-    this.checkInterval = options.checkInterval ?? 5000;
+    this.checkInterval = options.checkInterval ?? 10000;
     this.allowPriorityRestore = options.allowPriorityRestore ?? false;
 
     this.monitor();
@@ -55,9 +56,7 @@ export class ChannelService {
                 this.setActiveChannel(ch);
               }
             }
-          } catch {
-            console.log('error', ch);
-          }
+          } catch {}
         }
       }
     }, this.checkInterval);
@@ -88,7 +87,7 @@ export class ChannelService {
       try {
         const res = await fetch(this.activeChannel!.endpoint);
         if (!res.ok) throw new Error();
-        const data = await res.json();
+        const data: JokeResponse | RandomUserResponse = await res.json();
         this.buffer.push(data);
       } catch {
         this.activeChannel!.status = 'unavailable';
@@ -100,13 +99,19 @@ export class ChannelService {
   private simulateFailure() {
     setInterval(() => {
       if (this.activeChannel) {
+        console.warn(`[Simulated failure] Отключение канала: ${this.activeChannel.name}`);
         this.activeChannel.status = 'unavailable';
+        this.emit({
+          type: 'FAILOVER',
+          channelId: this.activeChannel.id,
+          newStatus: 'unavailable'
+        });
         this.failover();
       }
     }, 15000);
   }
 
-  private handleWebSocketMessage = (data: any) => {
+  private handleWebSocketMessage = (data: JokeResponse | RandomUserResponse) => {
     this.buffer.push(data);
   };
 
@@ -122,7 +127,7 @@ export class ChannelService {
     return this.activeChannel;
   }
 
-  public getBufferedData(): any[] {
+  public getBufferedData(): (JokeResponse | RandomUserResponse)[] {
     return this.buffer.splice(0);
   }
 }
